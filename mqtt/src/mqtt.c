@@ -14,6 +14,8 @@ char *ProductKey    = "a1EExFlVDfn";
 char *DeviceName    = "D001";
 char *DeviceSecret  = "e6eaac3c4a814b4b13cc3a6a78a4deb3";
 
+char *Subscribe_topic = "/sys/a1EExFlVDfn/D001/thing/service/property/set";
+
 char Mqtt_host[64];     //云域名
 int  Mqtt_port;         //端口
 
@@ -130,4 +132,45 @@ void  mqtt_send_connectpack()
 
     printf("total %d bytes\n",send_len);
     printf("send %d bytes\n",ret);
+}
+
+/**
+ * @brief 订阅主题
+ * 
+ * @param topic_name    主题名 
+ * @param qos 服务质量等级
+ */
+void mqtt_subscribe_topic(const char *topic_name,int qos)
+{
+    int variable_len = 2;       //可变报头
+    int topic_len = strlen(topic_name);
+    int payload_len = 2 + topic_len + 1;   
+    int length = variable_len + payload_len; 
+    int send_len = 0;
+
+    memset(Mqtt_send_buf,0, sizeof (Mqtt_send_buf));
+    Mqtt_send_buf[send_len++] = 0x82;   //固定报头
+
+    send_len += MQTTPacket_encode(&Mqtt_send_buf[send_len],length); //计算剩余长度
+
+    //消息标识符 0x01
+    Mqtt_send_buf[send_len++] = 0x00;       //MSB
+    Mqtt_send_buf[send_len++] = 0x01;       //LSB
+
+    //主题长度
+    Mqtt_send_buf[send_len++] = topic_len/256;  //MSB
+    Mqtt_send_buf[send_len++] = topic_len%256;  //LSB
+    //主题名
+    memcpy(&Mqtt_send_buf[send_len],topic_name,topic_len);
+    send_len += topic_len;
+
+    //服务质量等级
+    Mqtt_send_buf[send_len++] = qos;
+
+    int ret = write(Socket, Mqtt_send_buf, send_len);
+
+    printf("--------subscribe----------\n");
+    printf("total %d bytes\n",send_len);
+    printf("send %d bytes\n",ret);
+    printf("---------------------------\n");
 }

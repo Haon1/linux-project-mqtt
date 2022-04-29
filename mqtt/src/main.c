@@ -26,8 +26,11 @@ int main(int argc, char *argv[])
 
     //连接报文
     mqtt_send_connectpack();
-
     
-
+    sleep(2);
+    //订阅主题
+    mqtt_subscribe_topic(Subscribe_topic,0);
+    
+    
     pause();
 }

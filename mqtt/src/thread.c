@@ -17,11 +17,12 @@ void *handle_pingreq(void *arg)
     while(1)
     {
         pthread_cond_wait(&tp->cond_ping,&tp->mutex_ping);
-        int bytes = write(Socket,pingpak,2);
+        sleep(55);      //休眠55秒
+        int bytes = write(Socket,pingpak,2);    //发送心跳包
         if(bytes == 2)
             printf("pingreq send success\n");
         pthread_mutex_unlock(&tp->mutex_ping);
-        sleep(3);
+        
     }
 }
 
@@ -39,7 +40,7 @@ void *handle_recvmsg(void *arg)
             exit(-1);
         }
         //可以加个处理函数
-        if(Mqtt_Receive_buf[0]==0x20)
+        if(Mqtt_Receive_buf[0]=='\x20')
         {
             switch(Mqtt_Receive_buf[3])
             {
@@ -48,10 +49,21 @@ void *handle_recvmsg(void *arg)
                             break;
             }
         }
-        else if(Mqtt_Receive_buf[0]==0xd0)
+        else if(Mqtt_Receive_buf[0]=='\xd0')
         {
             printf("receive mqtt pingresp\n");
             pthread_cond_signal(&tp->cond_ping);
+        }
+        else if(Mqtt_Receive_buf[0]== '\x90')  //订阅确认
+        {
+            printf("receive mqtt suback\n");
+            switch(Mqtt_Receive_buf[4])
+            {
+                case 0x00:      printf("最大QoS 0\n");  break;
+                case 0x01:      printf("成功-- 最大QoS 1\n");  break;
+                case 0x02:      printf("成功 -- 最大QoS 2\n");  break;
+                case '\x80':    printf("订阅失败\n");  break;
+            }
         }
 
         memset(Mqtt_Receive_buf,0,sizeof(Mqtt_Receive_buf));
