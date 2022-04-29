@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "utils_hmac.h"
+#include "mqtt_encode.h"
 
 int Socket;     //套接字
 
@@ -20,7 +21,8 @@ char ClientId[128];     //client id
 char UserName[128];     //username
 char PassWord[128];     //Password
 
-char Mqtt_Receive_buf[512];     //消息接收区
+char Mqtt_Receive_buf[512];     //receive buf
+char Mqtt_send_buf[512];        //tx buf
 
 
 /**
@@ -79,7 +81,7 @@ int mqtt_connect_iot_server()
 //发送连接报文
 void  mqtt_send_connectpack()
 {
-    int fixed_len = 1;
+    //int fixed_len = 1;
     int variable_len = 10;
     int clientid_len = strlen(ClientId);
     int username_len = strlen(UserName);
@@ -87,54 +89,45 @@ void  mqtt_send_connectpack()
     int payload_len = 2+clientid_len + 2+username_len + 2+password_len;
     int length = variable_len + payload_len;
     int send_len = 0;
-    //data buf
-    char mqtt_send_buf[256]={0};
-
-    mqtt_send_buf[send_len++] = 0x10;
-
-    do
-    {
-        char d = length % 128;
-        length = length / 128;
-        if(length > 0)
-            d |= 0x80;
-        mqtt_send_buf[send_len++] = d;
-        fixed_len++;
-    } while (length>0);
+    
+    memset(Mqtt_send_buf,0, sizeof (Mqtt_send_buf));
+    Mqtt_send_buf[send_len++] = 0x10;
+    
+    send_len += MQTTPacket_encode(&Mqtt_send_buf[send_len],length);
 
     //Protocol Name
-    mqtt_send_buf[send_len++] = 0x00;
-    mqtt_send_buf[send_len++] = 0x04;
-    mqtt_send_buf[send_len++] = 'M';
-    mqtt_send_buf[send_len++] = 'Q';
-    mqtt_send_buf[send_len++] = 'T';
-    mqtt_send_buf[send_len++] = 'T';
+    Mqtt_send_buf[send_len++] = 0x00;
+    Mqtt_send_buf[send_len++] = 0x04;
+    Mqtt_send_buf[send_len++] = 'M';
+    Mqtt_send_buf[send_len++] = 'Q';
+    Mqtt_send_buf[send_len++] = 'T';
+    Mqtt_send_buf[send_len++] = 'T';
     //Protocol Level
-    mqtt_send_buf[send_len++] = 0x04;
+    Mqtt_send_buf[send_len++] = 0x04;
     //Connect Flags
-    mqtt_send_buf[send_len++] = 0xc0;
+    Mqtt_send_buf[send_len++] = 0xc0;
     //Keep Alive
-    mqtt_send_buf[send_len++] = 0x00;       //MSB
-    mqtt_send_buf[send_len++] = 0x3c;       //60s
+    Mqtt_send_buf[send_len++] = 0x00;       //MSB
+    Mqtt_send_buf[send_len++] = 0x3c;       //60s
 
-    mqtt_send_buf[send_len++] = clientid_len/256;   //MSB
-    mqtt_send_buf[send_len++] = clientid_len%256;   //LSB
-    memcpy(&mqtt_send_buf[send_len],ClientId,clientid_len);
+    Mqtt_send_buf[send_len++] = clientid_len/256;   //MSB
+    Mqtt_send_buf[send_len++] = clientid_len%256;   //LSB
+    memcpy(&Mqtt_send_buf[send_len],ClientId,clientid_len);
     send_len += clientid_len;
 
-    mqtt_send_buf[send_len++] = username_len/256;   //MSB
-    mqtt_send_buf[send_len++] = username_len%256;   //LSB
-    memcpy(&mqtt_send_buf[send_len],UserName,username_len);
+    Mqtt_send_buf[send_len++] = username_len/256;   //MSB
+    Mqtt_send_buf[send_len++] = username_len%256;   //LSB
+    memcpy(&Mqtt_send_buf[send_len],UserName,username_len);
     send_len += username_len;
 
-    mqtt_send_buf[send_len++] = password_len/256;   //MSB
-    mqtt_send_buf[send_len++] = password_len%256;   //LSB
-    memcpy(&mqtt_send_buf[send_len],PassWord,password_len);
+    Mqtt_send_buf[send_len++] = password_len/256;   //MSB
+    Mqtt_send_buf[send_len++] = password_len%256;   //LSB
+    memcpy(&Mqtt_send_buf[send_len],PassWord,password_len);
     send_len += password_len;
 
-    int bytes = write(Socket, mqtt_send_buf, fixed_len + variable_len + payload_len);
+    //int ret = write(Socket, Mqtt_send_buf, fixed_len + variable_len + payload_len);
+    int ret = write(Socket, Mqtt_send_buf, send_len);
 
-    printf("len = %d\n",fixed_len + variable_len + payload_len);
     printf("total %d bytes\n",send_len);
-    printf("send %d bytes\n",bytes);
+    printf("send %d bytes\n",ret);
 }

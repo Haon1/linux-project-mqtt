@@ -4,6 +4,7 @@
 
 extern int Socket;
 extern char Mqtt_Receive_buf[512];     //消息接收区
+extern char Mqtt_send_buf[512];        //tx buf
 
 //初始化连接参数
 void mqtt_iot_param_init();
