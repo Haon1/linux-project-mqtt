@@ -13,9 +13,13 @@ SRC_DIR=./src
 OUT_DIR=./out
 OBJ_DIR=${OUT_DIR}/obj
 BIN_DIR=${OUT_DIR}/bin
+DEST=${BIN_DIR}/mqtt_demo
 
-LIB=lpthread
+LIB=pthread
 INC=./include
+
+file=""
+temp=""
 
 #Create Output Directory
 function create_out_dir()
@@ -59,23 +63,38 @@ function purple_msg()
     echo -e "$PURPLE $@ $NONE"
 }
 
-function do_make()
+function generate_obj()
 {
-    gcc ./src/*.c -
+    file=`ls ${SRC_DIR}/*.c`
+    for a in $file
+    do
+        temp=${a%.*}                        # ${a%.*}       删除.和右边所有的字符
+        #echo "${OBJ_DIR}/${temp##*/}.o"    # ${temp##*/}   删除最后一个 /和左边所有字符
+        gcc $a -c -o ${OBJ_DIR}/${temp##*/}.o -I${INC} 
+        
+    done
 }
 
-#SOURCE = $(wildcard $(SRC_DIR)/*.c)
-#OBJ = $(patsubst %.c,$(OBJ_DIR)/%.o,$(notdir $(SOURCE)))
-#DEST = $(BIN_DIR)/mqtt_demo
+function link()
+{
+    gcc ${OBJ_DIR}/*.o -o ${DEST} -l${LIB} -lc -lgcc
+}
 
-#	$(CC) $(SOURCE) -o $(DEST) -I$(INC) -$(LIB)
+function do_make()
+{
+    generate_obj
+    link
+}
 
-red_msg "1"
-red_error_msg "2"
-yellow_msg "3"
-green_msg "4"
-blue_msg "5"
-if [ -e ${OUT_DIR} ];then
+
+#Create Output Directory
+if [ ! -e ${OUT_DIR} ]; then
+    green_msg "### Create Output Directory ###"
     create_out_dir
 fi
+
+#begin to compile
+purple_msg "### Start Compile ###"
+do_make
+green_msg "### End ###"
 
