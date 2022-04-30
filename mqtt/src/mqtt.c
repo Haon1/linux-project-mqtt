@@ -174,3 +174,41 @@ void mqtt_subscribe_topic(const char *topic_name,int qos)
     printf("send %d bytes\n",ret);
     printf("---------------------------\n");
 }
+
+/**
+ * @brief 取消订阅
+ * 
+ * @param topic_name 
+ */
+void mqtt_unsubscribe_topic(const char *topic_name)
+{
+    int variable_len = 2;       //可变报头
+    int topic_len = strlen(topic_name);
+    int payload_len = 2 + topic_len ;   
+    int length = variable_len + payload_len; 
+    int send_len = 0;
+
+    memset(Mqtt_send_buf,0, sizeof (Mqtt_send_buf));
+    Mqtt_send_buf[send_len++] = 0x82;   //固定报头
+
+    send_len += MQTTPacket_encode(&Mqtt_send_buf[send_len],length); //计算剩余长度
+
+    //消息标识符 0x01
+    Mqtt_send_buf[send_len++] = 0x00;       //MSB
+    Mqtt_send_buf[send_len++] = 0x01;       //LSB
+
+    //主题长度
+    Mqtt_send_buf[send_len++] = topic_len/256;  //MSB
+    Mqtt_send_buf[send_len++] = topic_len%256;  //LSB
+    //主题名
+    memcpy(&Mqtt_send_buf[send_len],topic_name,topic_len);
+    send_len += topic_len;
+
+    int ret = write(Socket, Mqtt_send_buf, send_len);
+
+    printf("--------unsubscribe----------\n");
+    printf("total %d bytes\n",send_len);
+    printf("send %d bytes\n",ret);
+    printf("---------------------------\n");
+}
+

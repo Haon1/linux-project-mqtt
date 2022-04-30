@@ -24,5 +24,11 @@ void  mqtt_send_connectpack();
  */
 void mqtt_subscribe_topic(const char *topic_name,int qos);
 
+/**
+ * @brief 取消订阅
+ * 
+ * @param topic_name 
+ */
+void mqtt_unsubscribe_topic(const char *topic_name);
 
 #endif  //_MQTT_H__

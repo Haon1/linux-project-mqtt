@@ -49,7 +49,7 @@ void *handle_recvmsg(void *arg)
                             break;
             }
         }
-        else if(Mqtt_Receive_buf[0]=='\xd0')
+        else if(Mqtt_Receive_buf[0]=='\xd0')    //心跳回复
         {
             printf("receive mqtt pingresp\n");
             pthread_cond_signal(&tp->cond_ping);
