@@ -189,7 +189,7 @@ void mqtt_unsubscribe_topic(const char *topic_name)
     int send_len = 0;
 
     memset(Mqtt_send_buf,0, sizeof (Mqtt_send_buf));
-    Mqtt_send_buf[send_len++] = 0x82;   //固定报头
+    Mqtt_send_buf[send_len++] = 0xa2;   //固定报头
 
     send_len += MQTTPacket_encode(&Mqtt_send_buf[send_len],length); //计算剩余长度
 
