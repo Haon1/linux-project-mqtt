@@ -6,6 +6,7 @@
 typedef struct thread
 {
     pthread_t pingreg_thir;     //ping 线程
+    pthread_t publish_thir;
     pthread_t receive_thir;     //接收数据线程
 
     pthread_cond_t cond_ping;        //条件变量

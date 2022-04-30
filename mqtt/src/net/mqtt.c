@@ -15,6 +15,7 @@ char *DeviceName    = "D001";
 char *DeviceSecret  = "e6eaac3c4a814b4b13cc3a6a78a4deb3";
 
 char *Subscribe_topic = "/sys/a1EExFlVDfn/D001/thing/service/property/set";
+char *Publish_topic = "/sys/a1EExFlVDfn/D001/thing/event/property/post";
 
 char Mqtt_host[64];     //云域名
 int  Mqtt_port;         //端口
@@ -207,6 +208,41 @@ void mqtt_unsubscribe_topic(const char *topic_name)
     int ret = write(Socket, Mqtt_send_buf, send_len);
 
     printf("--------unsubscribe----------\n");
+    printf("total %d bytes\n",send_len);
+    printf("send %d bytes\n",ret);
+    printf("---------------------------\n");
+}
+
+/**
+ * @brief 发布 针对qos 0
+ * 
+ * @param data 要发布的消息
+ */
+void mqtt_publish(const char *topic_name, const char *data)
+{
+    int topic_len = strlen(topic_name);
+    int variable_len = 2 + topic_len;
+    int payload_len = strlen(data);
+    int length = variable_len + payload_len; 
+    int send_len = 0;
+
+    memset(Mqtt_send_buf,0, sizeof (Mqtt_send_buf));
+    Mqtt_send_buf[send_len++] = 0x30;   //固定报头
+
+    send_len += MQTTPacket_encode(&Mqtt_send_buf[send_len], length);
+
+    Mqtt_send_buf[send_len++] = topic_len/256;  //MSB
+    Mqtt_send_buf[send_len++] = topic_len%256;  //LSB
+
+    memcpy(&Mqtt_send_buf[send_len],topic_name,topic_len);
+    send_len += topic_len;
+
+    memcpy(&Mqtt_send_buf[send_len],data,payload_len);
+    send_len += payload_len;
+
+    int ret = write(Socket, Mqtt_send_buf, send_len);
+
+    printf("--------publish----------\n");
     printf("total %d bytes\n",send_len);
     printf("send %d bytes\n",ret);
     printf("---------------------------\n");

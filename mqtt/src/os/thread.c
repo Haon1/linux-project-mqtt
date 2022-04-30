@@ -26,6 +26,22 @@ void *handle_pingreq(void *arg)
     }
 }
 
+void *handle_publish(void *arg)
+{
+    int i=1;
+    char data[128]={0};
+    while(1)
+    {
+        sleep(5);
+        sprintf(data,"{\"method\":\"thing.service.property.post\",\"id\":\"0001\",\"params\":\
+        {\"LockState\":%d,},\"version\":\"1.0.0\"}",i);
+
+        mqtt_publish(Publish_topic,data);
+
+        i^=1;
+    }
+}
+
 //接收数据线程
 void *handle_recvmsg(void *arg)
 {
@@ -101,6 +117,14 @@ void thread_param_init()
         return ;
     }
     printf("receive_thir  create success\n");
+    //创建数据上报线程
+    ret = pthread_create(&tp->publish_thir,NULL,handle_publish,NULL);
+    if(ret != 0)
+    {
+        printf("publish_thir  create fail\n");
+        return ;
+    }
+    printf("publish_thir  create success\n");
     
 }
 

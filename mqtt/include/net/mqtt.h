@@ -7,6 +7,7 @@ extern char Mqtt_Receive_buf[512];     //消息接收区
 extern char Mqtt_send_buf[512];        //tx buf
 
 extern char *Subscribe_topic;
+extern char *Publish_topic;
 
 
 //初始化连接参数
@@ -30,5 +31,12 @@ void mqtt_subscribe_topic(const char *topic_name,int qos);
  * @param topic_name 
  */
 void mqtt_unsubscribe_topic(const char *topic_name);
+
+/**
+ * @brief 发布 针对qos 0
+ * 
+ * @param data 要发布的消息
+ */
+void mqtt_publish(const char *topic_name, const char *data);
 
 #endif  //_MQTT_H__
