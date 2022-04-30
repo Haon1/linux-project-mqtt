@@ -16,7 +16,7 @@ BIN_DIR=${OUT_DIR}/bin
 DEST=${BIN_DIR}/mqtt_demo
 
 LIB=pthread
-INC=./include
+INC="-I./include/net -I./include/os -I./include/utils"
 
 file=""
 temp=""
@@ -65,12 +65,11 @@ function purple_msg()
 
 function generate_obj()
 {
-    file=`ls ${SRC_DIR}/*.c`
+    file=`find  ${SRC_DIR} -name *.c`
     for a in $file
     do
-        temp=${a%.*}                        # ${a%.*}       删除.和右边所有的字符
-        #echo "${OBJ_DIR}/${temp##*/}.o"    # ${temp##*/}   删除最后一个 /和左边所有字符
-        gcc $a -c -o ${OBJ_DIR}/${temp##*/}.o -I${INC} 
+        temp=${a%.*}
+        gcc $a -c -o ${OBJ_DIR}/${temp##*/}.o ${INC}/
         
     done
 }
